@@ -1,0 +1,34 @@
+# GraphTranSynergy — Dependencies
+# Generated 2026-09-21 | Tested with Python 3.12.10, PyTorch 2.13.0+cpu
+
+# ── Core deep learning ──────────────────────────────────────────────────────
+torch==2.13.0
+torchvision==0.28.0
+
+# ── PyTorch Geometric (graph neural networks) ───────────────────────────────
+# Base package (TransformerConv, InMemoryDataset, DataLoader, global_max_pool)
+torch-geometric
+
+# Optional sparse/scatter extensions — install with the PyG wheel index if
+# pip install torch-geometric alone does not pull them in:
+#   pip install torch-scatter torch-sparse torch-cluster \
+#       -f https://data.pyg.org/whl/torch-2.13.0+cpu.html
+torch-scatter
+torch-sparse
+torch-cluster
+
+# ── Chemistry ────────────────────────────────────────────────────────────────
+rdkit                 # molecule parsing (Chem.MolFromSmiles, GetAtoms, …)
+
+# ── Graph utilities ──────────────────────────────────────────────────────────
+networkx              # SMILES → graph edge construction
+
+# ── Scientific computing ─────────────────────────────────────────────────────
+numpy
+scipy
+pandas
+scikit-learn
+
+# ── Misc ─────────────────────────────────────────────────────────────────────
+tqdm
+matplotlib
