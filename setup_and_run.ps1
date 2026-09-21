@@ -36,8 +36,11 @@ Write-Host ""
 Write-Host "[3/6] Installing dependencies from requirements.txt ..." -ForegroundColor Yellow
 Write-Host "      (This may take a few minutes on first run)" -ForegroundColor Gray
 
-# Install torch first (CPU build) so PyG picks the right variant
-& $pip install torch==2.13.0 torchvision==0.28.0 --index-url https://download.pytorch.org/whl/cpu --quiet
+# Force uninstall any CPU version first to ensure GPU version installs
+& $pip uninstall torch torchvision torchaudio -y --quiet
+
+# Install torch (CUDA 12.4 build) so PyG picks the right variant
+& $pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124 --quiet
 
 # Install PyG base package
 Write-Host "      Installing torch-geometric ..." -ForegroundColor Gray
@@ -45,8 +48,7 @@ Write-Host "      Installing torch-geometric ..." -ForegroundColor Gray
 
 # Install PyG optional extensions (scatter / sparse / cluster) from PyG wheel index
 Write-Host "      Installing torch-scatter, torch-sparse, torch-cluster ..." -ForegroundColor Gray
-& $pip install torch-scatter torch-sparse torch-cluster `
-    --find-links https://data.pyg.org/whl/torch-2.13.0+cpu.html --quiet
+& $pip install torch-scatter torch-sparse torch-cluster -f https://data.pyg.org/whl/torch-2.6.0+cu124.html --quiet
 
 # Install everything else
 Write-Host "      Installing remaining packages ..." -ForegroundColor Gray
@@ -83,13 +85,19 @@ if (-Not (Test-Path "$ROOT\model\GraphTransformer.py")) {
 
 # ── Step 5: Create output directories ────────────────────────────────────────
 Write-Host ""
-Write-Host "[5/6] Creating output directories ..." -ForegroundColor Yellow
+Write-Host "[5/7] Creating output directories ..." -ForegroundColor Yellow
 New-Item -ItemType Directory -Force -Path "$ROOT\data\result\sun_pre_test\GraphTransformer" | Out-Null
 Write-Host "      Output directories ready." -ForegroundColor Green
 
-# ── Step 6: Run for one epoch ─────────────────────────────────────────────────
+# ── Step 6: Preprocess data ───────────────────────────────────────────────────
 Write-Host ""
-Write-Host "[6/6] Running run_one_epoch.py (NUM_EPOCHS=1, 5-fold CV) ..." -ForegroundColor Yellow
+Write-Host "[6/7] Preprocessing data (building .pt graph files) ..." -ForegroundColor Yellow
+Set-Location $ROOT
+& $python "$ROOT\preprocess_data.py"
+
+# ── Step 7: Run for one epoch ─────────────────────────────────────────────────
+Write-Host ""
+Write-Host "[7/7] Running run_one_epoch.py (NUM_EPOCHS=1, 5-fold CV) ..." -ForegroundColor Yellow
 Write-Host "      Output will stream below:" -ForegroundColor Gray
 Write-Host "------------------------------------------------------------" -ForegroundColor DarkGray
 Set-Location $ROOT

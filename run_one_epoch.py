@@ -9,6 +9,7 @@ Usage (from project root, inside the venv):
 """
 
 import random
+import time
 import numpy as np
 import pandas as pd
 import os
@@ -102,10 +103,12 @@ print(f"Dataset size  : {length}  |  fold size: {pot}")
 random_num = random.sample(range(0, length), length)
 
 # ── Cross-validation loop ─────────────────────────────────────────────────────
+run_start = time.time()
 for i in range(NUM_FOLDS):
     print(f"\n{'='*60}")
     print(f"  FOLD {i+1} / {NUM_FOLDS}")
     print(f"{'='*60}")
+    fold_start = time.time()
 
     test_num  = random_num[pot * i : pot * (i + 1)]
     train_num = random_num[: pot * i] + random_num[pot * (i + 1) :]
@@ -135,8 +138,10 @@ for i in range(NUM_FOLDS):
 
     best_auc = 0
     for epoch in range(NUM_EPOCHS):
+        epoch_start = time.time()
         train(model, device, drug1_loader_train, drug2_loader_train, optimizer, epoch + 1)
         T, S, Y = predicting(model, device, drug1_loader_test, drug2_loader_test)
+        epoch_elapsed = time.time() - epoch_start
 
         AUC        = roc_auc_score(T, S)
         precision, recall_curve, _ = metrics.precision_recall_curve(T, S)
@@ -150,7 +155,7 @@ for i in range(NUM_FOLDS):
         RECALL     = recall_score(T, Y)
 
         AUCs = [epoch + 1, AUC, PR_AUC, ACC, BACC, PREC, TPR, KAPPA, RECALL]
-        print(f"\n  Epoch {epoch+1} results — AUC: {AUC:.4f} | PR-AUC: {PR_AUC:.4f} | ACC: {ACC:.4f}")
+        print(f"\n  Epoch {epoch+1} results — AUC: {AUC:.4f} | PR-AUC: {PR_AUC:.4f} | ACC: {ACC:.4f} | Time: {epoch_elapsed:.1f}s")
 
         if best_auc < AUC:
             best_auc = AUC
@@ -160,4 +165,9 @@ for i in range(NUM_FOLDS):
             txtDF = pd.DataFrame([test_num, list(T), list(Y), list(S)])
             txtDF.to_csv(result_file, index=False, header=False)
 
-print(f"\nDone. Results saved to: data/result/sun_pre_test/GraphTransformer/")
+    fold_elapsed = time.time() - fold_start
+    print(f"\n  Fold {i+1} complete in {fold_elapsed:.1f}s")
+
+total_elapsed = time.time() - run_start
+print(f"\nDone. Total time: {total_elapsed:.1f}s ({total_elapsed/60:.1f} min)")
+print(f"Results saved to: data/result/sun_pre_test/GraphTransformer/")
